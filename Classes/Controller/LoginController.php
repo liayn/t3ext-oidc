@@ -19,7 +19,7 @@ namespace Causal\Oidc\Controller;
 
 use Causal\Oidc\Service\OAuthService;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Http\PropagateResponseException;
+use TYPO3\CMS\Core\Http\ImmediateResponseException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
@@ -130,7 +130,7 @@ class LoginController
 
     protected function redirect(string $redirectUrl): void
     {
-        throw new PropagateResponseException(new RedirectResponse($redirectUrl));
+        throw new ImmediateResponseException(new RedirectResponse($redirectUrl));
     }
 
     protected function generateCodeVerifier(): string

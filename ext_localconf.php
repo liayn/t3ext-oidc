@@ -1,15 +1,8 @@
 <?php
-
-use Causal\Oidc\Controller\AuthenticationController;
-use Causal\Oidc\Service\AuthenticationService;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
-
 defined('TYPO3') or die();
 
-$settings = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('oidc') ?? [];
+// Configuration of authentication service
+$settings = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Configuration\ExtensionConfiguration::class)->get('oidc') ?? [];
 
 // Service configuration
 $subTypesArr = [];
@@ -24,8 +17,8 @@ if (is_array($subTypesArr)) {
     $subTypes = implode(',', $subTypesArr);
 }
 
-$authenticationClassName = AuthenticationService::class;
-ExtensionManagementUtility::addService(
+$authenticationClassName = \Causal\Oidc\Service\AuthenticationService::class;
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addService(
     'oidc',
     'auth' /* sv type */,
     $authenticationClassName /* sv key */,
@@ -42,15 +35,15 @@ ExtensionManagementUtility::addService(
     ]
 );
 
-ExtensionUtility::configurePlugin(
+\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
     'oidc',
     'Pi1',
     [
-        AuthenticationController::class => 'connect',
+        \Causal\Oidc\Controller\AuthenticationController::class => 'connect',
     ],
     // non-cacheable actions
     [
-        AuthenticationController::class => 'connect'
+        \Causal\Oidc\Controller\AuthenticationController::class => 'connect'
     ]
 );
 
@@ -58,7 +51,7 @@ ExtensionUtility::configurePlugin(
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPItoST43('oidc', null, '_login');
 
 // Require 3rd-party libraries, in case TYPO3 does not run in composer mode
-$pharFileName = ExtensionManagementUtility::extPath('oidc') . 'Libraries/league-oauth2-client.phar';
+$pharFileName = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('oidc') . 'Libraries/league-oauth2-client.phar';
 if (is_file($pharFileName)) {
     @include 'phar://' . $pharFileName . '/vendor/autoload.php';
 }
