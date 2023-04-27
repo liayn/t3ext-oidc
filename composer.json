@@ -25,18 +25,15 @@
 		"php": ">= 7.4.0, <= 8.2.99",
 		"ext-curl": "*",
 		"ext-json": "*",
-		"typo3/cms-core": "^11.5",
-		"typo3/cms-frontend": "^11.5",
-		"typo3/cms-felogin": "^11.5",
+		"typo3/cms-extbase": "^11.5 || ^12.4",
+		"typo3/cms-frontend": "^11.5 || ^12.4",
+		"typo3/cms-felogin": "^11.5 || ^12.4",
 		"league/oauth2-client": "^2.7"
 	},
 	"autoload": {
 		"psr-4": {
 			"Causal\\Oidc\\": "Classes/"
 		}
-	},
-	"replace": {
-		"typo3-ter/oidc": "self.version"
 	},
 	"scripts": {
 		"extension-create-libs": [
