@@ -724,9 +724,14 @@ class AuthenticationService extends \TYPO3\CMS\Core\Authentication\Authenticatio
 
     protected function generatePassword(): string
     {
-        $mode = ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()
-            ? 'FE'
-            : 'BE';
+        if (isset($GLOBALS['TYPO3_REQUEST'])) {
+            $mode = ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()
+                ? 'FE'
+                : 'BE';
+        } else {
+            $mode = TYPO3_MODE;
+        }
+
         $password = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$'), 0, 20);
 
         $passwordHashFactory = GeneralUtility::makeInstance(PasswordHashFactory::class);
