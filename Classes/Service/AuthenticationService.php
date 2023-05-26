@@ -292,12 +292,20 @@ class AuthenticationService extends \TYPO3\CMS\Core\Authentication\Authenticatio
      */
     protected function convertResourceOwner(array $info)
     {
-        if (ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()) {
-            $mode = 'FE';
+        if (isset($GLOBALS['TYPO3_REQUEST'])) {
+            if (ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()) {
+                $mode = 'FE';
+            } else {
+                $mode = 'BE';
+            }
+        } else {
+            $mode = TYPO3_MODE;
+        }
+        if ($mode === 'FE') {
             $userTable = 'fe_users';
             $userGroupTable = 'fe_groups';
         } else {
-            $mode = 'BE';
+
             $userTable = 'be_users';
             $userGroupTable = 'be_groups';
         }
