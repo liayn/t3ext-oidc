@@ -47,6 +47,10 @@ $authenticationClassName = \Causal\Oidc\Service\AuthenticationService::class;
     ]
 );
 
+    if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('felogin')) {
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['felogin']['postProcContent'][$_EXTKEY] = \Causal\Oidc\Hooks\FeloginHook::class . '->postProcContent';
+    }
+
     // Add typoscript for custom login plugin
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPItoST43('oidc', null, '_login');
 
