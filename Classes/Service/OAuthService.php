@@ -19,6 +19,7 @@ namespace Causal\Oidc\Service;
 
 use Causal\Oidc\Factory\GenericOAuthProviderFactory;
 use Causal\Oidc\Factory\OAuthProviderFactoryInterface;
+use Causal\Oidc\OidcConfiguration;
 use GuzzleHttp\RequestOptions;
 use League\OAuth2\Client\Grant\AuthorizationCode;
 use League\OAuth2\Client\Grant\Password;
@@ -37,24 +38,13 @@ use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
  */
 class OAuthService
 {
-    /**
-     * @var array
-     */
-    protected array $settings = [];
+    protected OidcConfiguration $config;
 
     protected ?AbstractProvider $provider = null;
 
-    /**
-     * Sets the settings.
-     *
-     * @param array $settings
-     * @return $this
-     */
-    public function setSettings(array $settings): self
+    public function __construct(OidcConfiguration $config)
     {
-        $this->settings = $settings;
-
-        return $this;
+        $this->config = $config;
     }
 
     /**
@@ -65,12 +55,10 @@ class OAuthService
      */
     public function getAuthorizationUrl(array $options = []): string
     {
-        if (!empty($this->settings['oidcAuthorizeLanguageParameter'])) {
-            $languageOption = $this->settings['oidcAuthorizeLanguageParameter'];
-            if (!empty($languageOption)) {
-                $language = $this->getTSFE() ? $this->getTSFE()->getLanguage()->getTwoLetterIsoCode() : 'en';
-                $options[$languageOption] = $language;
-            }
+        $languageOption = $this->config->authorizeLanguageParameter;
+        if ($languageOption) {
+            $language = $this->getTSFE() ? $this->getTSFE()->getLanguage()->getTwoLetterIsoCode() : 'en';
+            $options[$languageOption] = $language;
         }
 
         return $this->getProvider()->getAuthorizationUrl($options);
@@ -111,7 +99,7 @@ class OAuthService
             $options = [
                 'username' => $codeOrUsername,
                 'password' => $password,
-                'scope' => $this->settings['oidcClientScopes'],
+                'scope' => $this->config->oidcClientScopes,
             ];
             // The GenericProvider has this as a public function (contrary to the interface),
             // so we use its scopes instead as there might be some modified provider.
@@ -146,10 +134,10 @@ class OAuthService
      */
     public function getAccessTokenWithRequestPathAuthentication(string $username, string $password): ?AccessToken
     {
-        $url = $this->settings['oidcEndpointAuthorize'] . '?' . http_build_query([
+        $url = $this->config->endpointAuthorize . '?' . http_build_query([
                 'response_type' => 'code',
-                'client_id' => $this->settings['oidcClientKey'],
-                'scope' => $this->settings['oidcClientScopes'],
+                'client_id' => $this->config->oidcClientKey,
+                'scope' => $this->config->oidcClientScopes,
                 'redirect_uri' => $this->getRedirectUrl(),
             ]);
 
@@ -198,17 +186,17 @@ class OAuthService
      */
     public function revokeToken(AccessToken $token): bool
     {
-        if (empty($this->settings['oidcEndpointRevoke'])) {
+        if (!$this->config->endpointRevoke) {
             return false;
         }
 
         $provider = $this->getProvider();
         $request = $provider->getRequest(
             AbstractProvider::METHOD_POST,
-            $this->settings['oidcEndpointRevoke'],
+            $this->config->endpointRevoke,
             [
                 'headers' => [
-                    'Authorization' => 'Basic ' . base64_encode($this->settings['oidcClientKey'] . ':' . $this->settings['oidcClientSecret']),
+                    'Authorization' => 'Basic ' . base64_encode($this->config->oidcClientKey . ':' . $this->config->oidcClientSecret),
                     'Content-Type' => 'application/x-www-form-urlencoded',
                 ],
                 'body' => 'token=' . $token->getToken(),
@@ -224,13 +212,13 @@ class OAuthService
     protected function getProvider(): AbstractProvider
     {
         if ($this->provider === null) {
-            $factoryClass = $this->settings['oauthProviderFactory'] ?: GenericOAuthProviderFactory::class;
+            $factoryClass = $this->config->oauthProviderFactory ?: GenericOAuthProviderFactory::class;
             if (!is_a($factoryClass, OAuthProviderFactoryInterface::class, true)) {
                 throw new RuntimeException('OAuth provider factory class must implement the OAuthProviderFactoryInterface', 1652689564769);
             }
 
-            $settings = $this->settings;
-            $settings['oidcRedirectUri'] = $this->getRedirectUrl();
+            $settings = $this->config;
+            $settings->oidcRedirectUri = $this->getRedirectUrl();
 
             /** @var OAuthProviderFactoryInterface $factory */
             $factory = GeneralUtility::makeInstance($factoryClass);
@@ -242,7 +230,7 @@ class OAuthService
 
     public function getFreshAccessToken(): ?AccessToken
     {
-        $serializedToken = $this->settings['access_token'];
+        $serializedToken = ''; // @todo current access_token
         $options = json_decode($serializedToken, true);
         if (empty($serializedToken) || empty($options)) {
             // Invalid token
@@ -268,7 +256,7 @@ class OAuthService
 
     protected function getRedirectUrl(): string
     {
-        return $this->settings['oidcRedirectUri'] ?: GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
+        return $this->config->oidcRedirectUri ?: GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
     }
 
     protected function getTSFE(): ? TypoScriptFrontendController

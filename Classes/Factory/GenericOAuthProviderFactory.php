@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Causal\Oidc\Factory;
 
+use Causal\Oidc\OidcConfiguration;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Provider\GenericProvider;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -24,16 +25,16 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class GenericOAuthProviderFactory implements OAuthProviderFactoryInterface
 {
 
-    public function create(array $settings): AbstractProvider
+    public function create(OidcConfiguration $settings): AbstractProvider
     {
         return new GenericProvider([
-                'clientId' => $settings['oidcClientKey'],
-                'clientSecret' => $settings['oidcClientSecret'],
-                'redirectUri' => $settings['oidcRedirectUri'],
-                'urlAuthorize' => $settings['oidcEndpointAuthorize'],
-                'urlAccessToken' => $settings['oidcEndpointToken'],
-                'urlResourceOwnerDetails' => $settings['oidcEndpointUserInfo'],
-                'scopes' => GeneralUtility::trimExplode(',', $settings['oidcClientScopes'], true),
+                'clientId' => $settings->oidcClientKey,
+                'clientSecret' => $settings->oidcClientSecret,
+                'redirectUri' => $settings->oidcRedirectUri,
+                'urlAuthorize' => $settings->endpointAuthorize,
+                'urlAccessToken' => $settings->endpointToken,
+                'urlResourceOwnerDetails' => $settings->endpointUserInfo,
+                'scopes' => GeneralUtility::trimExplode(',', $settings->oidcClientScopes, true),
             ]);
     }
 }
